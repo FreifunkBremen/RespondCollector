@@ -25,6 +25,10 @@ type Connection struct {
 
 type Config map[string]interface{}
 
+func (c Config) Type() string {
+	return c["type"].(string)
+}
+
 func (c Config) Address() string {
 	return c["address"].(string)
 }
@@ -37,7 +41,7 @@ func Connect(configuration map[string]interface{}) (database.Connection, error) 
 	var config Config
 	config = configuration
 
-	conn, err := net.Dial("udp6", config.Address())
+	conn, err := net.Dial(config.Type(), config.Address())
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +58,7 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
 
-	flater, err := flate.NewWriter(writer, flate.NoCompression)
+	flater, err := flate.NewWriter(writer, flate.BestCompression)
 	if err != nil {
 		log.Printf("[database-yanic] could not create flater: %s", err)
 		return
