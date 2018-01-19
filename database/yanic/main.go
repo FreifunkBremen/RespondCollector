@@ -5,7 +5,6 @@ package yanic
  */
 import (
 	"bufio"
-	"bytes"
 	"compress/flate"
 	"encoding/json"
 	"log"
@@ -55,8 +54,8 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 		Statistics: node.Statistics,
 		Neighbours: node.Neighbours,
 	}
-	var b bytes.Buffer
-	writer := bufio.NewWriter(&b)
+
+	writer := bufio.NewWriterSize(conn.conn, 8192)
 
 	flater, err := flate.NewWriter(writer, flate.BestCompression)
 	if err != nil {
@@ -70,13 +69,17 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 		if node.Nodeinfo != nil && node.Nodeinfo.NodeID != "" {
 			nodeid = node.Nodeinfo.NodeID
 		}
-		log.Printf("[database-yanic] could not send %s node: %s", nodeid, err)
+		log.Printf("[database-yanic] could not encode %s node: %s", nodeid, err)
 		return
 	}
-	flater.Flush()
-	writer.Flush()
-	conn.conn.Write(b.Bytes())
-
+	err = flater.Flush()
+	if err != nil {
+		log.Printf("[database-yanic] could not compress: %s", err)
+	}
+	err = writer.Flush()
+	if err != nil {
+		log.Printf("[database-yanic] could not send: %s", err)
+	}
 }
 
 func (conn *Connection) InsertLink(link *runtime.Link, time time.Time) {
