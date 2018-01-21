@@ -1,4 +1,4 @@
-package yanic
+package respondd
 
 /**
  * This database type is for injecting into another yanic instance.
@@ -33,7 +33,7 @@ func (c Config) Address() string {
 }
 
 func init() {
-	database.RegisterAdapter("yanic", Connect)
+	database.RegisterAdapter("respondd", Connect)
 }
 
 func Connect(configuration map[string]interface{}) (database.Connection, error) {

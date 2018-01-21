@@ -1,4 +1,4 @@
-package yanic
+package respondd
 
 import (
 	"testing"
