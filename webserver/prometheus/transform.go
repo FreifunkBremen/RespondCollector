@@ -50,15 +50,23 @@ func MetricsFromNode(nodes *runtime.Nodes, node *runtime.Node) []Metric {
 
 	// before node metrics to get link statics undependent of node validation
 	for _, link := range nodes.NodeLinks(node) {
+		label := map[string]interface{}{
+			"source_id":       link.SourceID,
+			"source_addr":     link.SourceAddress,
+			"source_hostname": link.SourceHostname,
+			"target_id":       link.TargetID,
+			"target_addr":     link.TargetAddress,
+		}
+		if hostname := link.SourceHostname; hostname != "" {
+			label["source_hostname"] = hostname
+		}
+		if hostname := link.TargetHostname; hostname != "" {
+			label["target_hostname"] = hostname
+		}
 		m = append(m, Metric{
-			Labels: map[string]interface{}{
-				"source_id":   link.SourceID,
-				"source_addr": link.SourceAddress,
-				"target_id":   link.TargetID,
-				"target_addr": link.TargetAddress,
-			},
-			Name:  "yanic_link",
-			Value: link.TQ * 100,
+			Labels: label,
+			Name:   "yanic_link",
+			Value:  link.TQ * 100,
 		})
 	}
 
