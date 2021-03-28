@@ -12,7 +12,7 @@ func MetricLabelsFromNode(node *runtime.Node) (labels map[string]interface{}) {
 		return
 	}
 
-	labels["node_id"] =  nodeinfo.NodeID
+	labels["node_id"] = nodeinfo.NodeID
 	labels["hostname"] = nodeinfo.Hostname
 
 	if nodeinfo.System.SiteCode != "" {
@@ -27,9 +27,11 @@ func MetricLabelsFromNode(node *runtime.Node) (labels map[string]interface{}) {
 	// Hardware
 	labels["model"] = nodeinfo.Hardware.Model
 	labels["nproc"] = nodeinfo.Hardware.Nproc
-	labels["firmware_base"] = nodeinfo.Software.Firmware.Base
-	labels["firmware_release"] = nodeinfo.Software.Firmware.Release
-	if nodeinfo.Software.Autoupdater.Enabled {
+	if firmware := nodeinfo.Software.Firmware; firmware != nil {
+		labels["firmware_base"] = firmware.Base
+		labels["firmware_release"] = firmware.Release
+	}
+	if nodeinfo.Software.Autoupdater != nil && nodeinfo.Software.Autoupdater.Enabled {
 		labels["autoupdater"] = nodeinfo.Software.Autoupdater.Branch
 	} else {
 		labels["autoupdater"] = runtime.DISABLED_AUTOUPDATER
