@@ -7,6 +7,8 @@ require (
 	github.com/bdlm/log v0.1.20
 	github.com/bdlm/std v1.0.1
 	github.com/fgrosse/graphigo v0.0.0-20151220153422-55a0a92a7030
+	github.com/go-chi/chi v4.0.2+incompatible // indirect
+	github.com/influxdata/influxdb-client-go/v2 v2.3.0 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20200515024757-02f0bf5dbca3
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/goveralls v0.0.8 // indirect
@@ -21,5 +23,4 @@ require (
 	github.com/tidwall/gjson v1.6.0
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/fgrosse/graphigo.v2 v2.0.0-20151220153422-55a0a92a7030 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
