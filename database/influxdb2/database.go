@@ -45,29 +45,25 @@ func (c Config) Organization() string {
 	return ""
 }
 func (c Config) Bucket(measurement string) string {
+	logger := log.WithFields(map[string]interface{}{
+		"organization_id": c.Organization(),
+		"address":         c.Address(),
+		"measurement":     measurement,
+	})
 	if d, ok := c["buckets"]; ok {
 		dMap := d.(map[string]interface{})
 		if d, ok := dMap[measurement]; ok {
 			bucket := d.(string)
-			log.WithFields(map[string]interface{}{
-				"measurement": measurement,
-				"bucket":      bucket,
-			}).Info("get bucket for writeapi")
+			logger.WithField("bucket", bucket).Info("get bucket for writeapi")
 			return bucket
 		}
 		if d, ok := c["bucket_default"]; ok {
 			bucket := d.(string)
-			log.WithFields(map[string]interface{}{
-				"measurement": measurement,
-				"bucket":      bucket,
-			}).Info("get bucket for writeapi")
+			logger.WithField("bucket", bucket).Info("get bucket for writeapi")
 			return bucket
 		}
 	}
-	log.WithFields(map[string]interface{}{
-		"measurement": measurement,
-		"bucket":      "",
-	}).Info("get bucket for writeapi")
+	logger.Panic("no bucket found for measurement")
 	return ""
 }
 func (c Config) Tags() map[string]string {
