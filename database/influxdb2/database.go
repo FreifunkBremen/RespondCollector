@@ -48,12 +48,26 @@ func (c Config) Bucket(measurement string) string {
 	if d, ok := c["buckets"]; ok {
 		dMap := d.(map[string]interface{})
 		if d, ok := dMap[measurement]; ok {
-			return d.(string)
+			bucket := d.(string)
+			log.WithFields(map[string]interface{}{
+				"measurement": measurement,
+				"bucket":      bucket,
+			}).Info("get bucket for writeapi")
+			return bucket
 		}
 		if d, ok := c["bucket_default"]; ok {
-			return d.(string)
+			bucket := d.(string)
+			log.WithFields(map[string]interface{}{
+				"measurement": measurement,
+				"bucket":      bucket,
+			}).Info("get bucket for writeapi")
+			return bucket
 		}
 	}
+	log.WithFields(map[string]interface{}{
+		"measurement": measurement,
+		"bucket":      "",
+	}).Info("get bucket for writeapi")
 	return ""
 }
 func (c Config) Tags() map[string]string {
