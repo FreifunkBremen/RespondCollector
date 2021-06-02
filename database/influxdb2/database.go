@@ -63,6 +63,11 @@ func (c Config) Bucket(measurement string) string {
 			return bucket
 		}
 	}
+	if d, ok := c["bucket_default"]; ok {
+		bucket := d.(string)
+		logger.WithField("bucket", bucket).Info("get bucket for writeapi")
+		return bucket
+	}
 	logger.Panic("no bucket found for measurement")
 	return ""
 }
