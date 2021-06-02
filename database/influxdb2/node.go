@@ -9,14 +9,8 @@ import (
 	influxdb "github.com/influxdata/influxdb-client-go/v2"
 )
 
-// PruneNodes prunes historical per-node data
+// PruneNodes prunes historical per-node data - not nessasary, juse configurate your influxdb2
 func (conn *Connection) PruneNodes(deleteAfter time.Duration) {
-	/* -
-	for _, measurement := range []string{MeasurementNode, MeasurementLink} {
-		query := fmt.Sprintf("delete from %s where time < now() - %ds", measurement, deleteAfter/time.Second)
-		conn.client.Query(client.NewQuery(query, conn.config.Database(), "m"))
-	}
-	*/
 }
 
 // InsertNode stores statistics and neighbours in the database
@@ -171,7 +165,7 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 		p.AddTag("frequency"+suffix, strconv.Itoa(int(airtime.Frequency)))
 	}
 
-	conn.writeAPI.WritePoint(p)
+	conn.writeAPI[MeasurementNode].WritePoint(p)
 
 	// Add DHCP statistics
 	if dhcp := stats.DHCP; dhcp != nil {
@@ -196,7 +190,7 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 			p.AddTag("hostname", nodeinfo.Hostname)
 		}
 
-		conn.writeAPI.WritePoint(p)
+		conn.writeAPI[MeasurementDHCP].WritePoint(p)
 	}
 
 	return

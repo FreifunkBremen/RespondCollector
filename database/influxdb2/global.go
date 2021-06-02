@@ -48,7 +48,7 @@ func (conn *Connection) InsertGlobals(stats *runtime.GlobalStats, time time.Time
 	if domain != runtime.GLOBAL_DOMAIN {
 		p = p.AddTag("domain", domain)
 	}
-	conn.writeAPI.WritePoint(p)
+	conn.writeAPI[MeasurementGlobal].WritePoint(p)
 
 	conn.addCounterMap(counterMeasurementModel, stats.Models, time, site, domain)
 	conn.addCounterMap(counterMeasurementFirmware, stats.Firmwares, time, site, domain)
@@ -69,6 +69,6 @@ func (conn *Connection) addCounterMap(name string, m runtime.CounterMap, t time.
 			AddTag("site", site).
 			AddTag("domain", domain).
 			AddTag("value", key)
-		conn.writeAPI.WritePoint(p)
+		conn.writeAPI[name].WritePoint(p)
 	}
 }

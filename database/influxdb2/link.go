@@ -26,5 +26,5 @@ func (conn *Connection) InsertLink(link *runtime.Link, t time.Time) {
 	if link.TargetHostname != "" {
 		p.AddTag("target.hostname", link.TargetHostname)
 	}
-	conn.writeAPI.WritePoint(p)
+	conn.writeAPI[MeasurementLink].WritePoint(p)
 }

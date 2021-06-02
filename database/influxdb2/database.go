@@ -1,12 +1,11 @@
 package influxdb
 
 import (
-	"context"
-
 	influxdb "github.com/influxdata/influxdb-client-go/v2"
 	influxdbAPI "github.com/influxdata/influxdb-client-go/v2/api"
 
 	"github.com/FreifunkBremen/yanic/database"
+	"github.com/bdlm/log"
 )
 
 const (
@@ -24,7 +23,7 @@ type Connection struct {
 	database.Connection
 	config   Config
 	client   influxdb.Client
-	writeAPI influxdbAPI.WriteAPI
+	writeAPI map[string]influxdbAPI.WriteAPI
 }
 
 type Config map[string]interface{}
@@ -32,33 +31,38 @@ type Config map[string]interface{}
 func (c Config) Address() string {
 	return c["address"].(string)
 }
-func (c Config) Token() (string, bool) {
+func (c Config) Token() string {
 	if d, ok := c["token"]; ok {
-		return d.(string), true
+		return d.(string)
 	}
-	return "", false
-}
-func (c Config) Username() string {
-	return c["username"].(string)
-}
-func (c Config) Password() string {
-	return c["password"].(string)
+	log.Panic("influxdb2 - no token given")
+	return ""
 }
 func (c Config) Organization() string {
-	if d, ok := c["organization"]; ok {
+	if d, ok := c["organization_id"]; ok {
 		return d.(string)
 	}
 	return ""
 }
-func (c Config) Bucket() string {
-	if d, ok := c["bucket"]; ok {
-		return d.(string)
+func (c Config) Bucket(measurement string) string {
+	if d, ok := c["buckets"]; ok {
+		dMap := d.(map[string]interface{})
+		if d, ok := dMap[measurement]; ok {
+			return d.(string)
+		}
+		if d, ok := c["bucket_default"]; ok {
+			return d.(string)
+		}
 	}
 	return ""
 }
 func (c Config) Tags() map[string]string {
 	if c["tags"] != nil {
-		return c["tags"].(map[string]string)
+		tags := make(map[string]string)
+		for k, v := range c["tags"].(map[string]interface{}) {
+			tags[k] = v.(string)
+		}
+		return tags
 	}
 	return nil
 }
@@ -70,19 +74,18 @@ func Connect(configuration map[string]interface{}) (database.Connection, error) 
 	var config Config
 	config = configuration
 
-	token, tokenOK := config.Token()
 	// Make client
-	client := influxdb.NewClientWithOptions(config.Address(), token, influxdb.DefaultOptions().SetBatchSize(batchMaxSize))
-	if !tokenOK {
-		ctx := context.Background()
-		// The first call must be signIn
-		err := client.UsersAPI().SignIn(ctx, config.Username(), config.Password())
-		if err != nil {
-			return nil, err
-		}
-	}
+	client := influxdb.NewClientWithOptions(config.Address(), config.Token(), influxdb.DefaultOptions().SetBatchSize(batchMaxSize))
 
-	writeAPI := client.WriteAPI(config.Organization(), config.Bucket())
+	writeAPI := map[string]influxdbAPI.WriteAPI{
+		MeasurementLink:               client.WriteAPI(config.Organization(), config.Bucket(MeasurementLink)),
+		MeasurementNode:               client.WriteAPI(config.Organization(), config.Bucket(MeasurementNode)),
+		MeasurementDHCP:               client.WriteAPI(config.Organization(), config.Bucket(MeasurementDHCP)),
+		MeasurementGlobal:             client.WriteAPI(config.Organization(), config.Bucket(MeasurementGlobal)),
+		CounterMeasurementFirmware:    client.WriteAPI(config.Organization(), config.Bucket(CounterMeasurementFirmware)),
+		CounterMeasurementModel:       client.WriteAPI(config.Organization(), config.Bucket(CounterMeasurementModel)),
+		CounterMeasurementAutoupdater: client.WriteAPI(config.Organization(), config.Bucket(CounterMeasurementAutoupdater)),
+	}
 
 	db := &Connection{
 		config:   config,
@@ -95,6 +98,8 @@ func Connect(configuration map[string]interface{}) (database.Connection, error) 
 
 // Close all connection and clean up
 func (conn *Connection) Close() {
-	conn.writeAPI.Flush()
+	for _, api := range conn.writeAPI {
+		api.Flush()
+	}
 	conn.client.Close()
 }
