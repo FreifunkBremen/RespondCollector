@@ -5,6 +5,7 @@ import (
 
 	"github.com/FreifunkBremen/yanic/runtime"
 
+	"github.com/bdlm/log"
 	influxdb "github.com/influxdata/influxdb-client-go/v2"
 )
 
@@ -59,6 +60,10 @@ func (conn *Connection) InsertGlobals(stats *runtime.GlobalStats, time time.Time
 // The key are used as 'value' tag.
 // The value is used as 'counter' field.
 func (conn *Connection) addCounterMap(name string, m runtime.CounterMap, t time.Time, site string, domain string) {
+	writeAPI, ok := conn.writeAPI[name]
+	if !ok {
+		log.WithField("name", name).Panic("no writeAPI found for countermap")
+	}
 	for key, count := range m {
 		p := influxdb.NewPoint("stat",
 			conn.config.Tags(),
@@ -69,6 +74,6 @@ func (conn *Connection) addCounterMap(name string, m runtime.CounterMap, t time.
 			AddTag("site", site).
 			AddTag("domain", domain).
 			AddTag("value", key)
-		conn.writeAPI[name].WritePoint(p)
+		writeAPI.WritePoint(p)
 	}
 }
