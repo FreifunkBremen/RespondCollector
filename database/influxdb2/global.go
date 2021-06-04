@@ -51,18 +51,18 @@ func (conn *Connection) InsertGlobals(stats *runtime.GlobalStats, time time.Time
 	}
 	conn.writeAPI[MeasurementGlobal].WritePoint(p)
 
-	conn.addCounterMap(counterMeasurementModel, stats.Models, time, site, domain)
-	conn.addCounterMap(counterMeasurementFirmware, stats.Firmwares, time, site, domain)
-	conn.addCounterMap(counterMeasurementAutoupdater, stats.Autoupdater, time, site, domain)
+	conn.addCounterMap(CounterMeasurementModel, counterMeasurementModel, stats.Models, time, site, domain)
+	conn.addCounterMap(CounterMeasurementFirmware, counterMeasurementFirmware, stats.Firmwares, time, site, domain)
+	conn.addCounterMap(CounterMeasurementAutoupdater, counterMeasurementAutoupdater, stats.Autoupdater, time, site, domain)
 }
 
 // Saves the values of a CounterMap in the database.
 // The key are used as 'value' tag.
 // The value is used as 'counter' field.
-func (conn *Connection) addCounterMap(name string, m runtime.CounterMap, t time.Time, site string, domain string) {
-	writeAPI, ok := conn.writeAPI[name]
+func (conn *Connection) addCounterMap(writeName, name string, m runtime.CounterMap, t time.Time, site string, domain string) {
+	writeAPI, ok := conn.writeAPI[writeName]
 	if !ok {
-		log.WithField("name", name).Panic("no writeAPI found for countermap")
+		log.WithField("writeName", writeName).Panic("no writeAPI found for countermap")
 	}
 	for key, count := range m {
 		p := influxdb.NewPoint("stat",
